@@ -1,7 +1,10 @@
 package edu.gvsu.cis.convcalc;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -10,6 +13,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.firebase.database.ChildEventListener;
@@ -28,6 +32,9 @@ import java.util.List;
 import edu.gvsu.cis.convcalc.UnitsConverter.LengthUnits;
 import edu.gvsu.cis.convcalc.UnitsConverter.VolumeUnits;
 import edu.gvsu.cis.convcalc.dummy.HistoryContent;
+import webservice.WeatherService;
+
+import static webservice.WeatherService.BROADCAST_WEATHER;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView fromUnits;
     private TextView title;
 
+    private TextView p1temperature = null;
+    private TextView p1current = null;
+    private ImageView p1weatherIcon = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +81,10 @@ public class MainActivity extends AppCompatActivity {
         title = findViewById(R.id.title);
 
 
+        p1temperature = findViewById(R.id.p1temperature);
+        p1current = findViewById(R.id.p1current);
+        p1weatherIcon = findViewById(R.id.p1weatherIcon);
+
 
         calcButton.setOnClickListener(v -> {
             doConversion();
@@ -79,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
             toField.setText("");
             fromField.setText("");
             hideKeyboard();
+            setWeatherViews(View.INVISIBLE);
         });
 
         modeButton.setOnClickListener(v -> {
@@ -118,18 +134,27 @@ public class MainActivity extends AppCompatActivity {
 //
     }
 
+    private void setWeatherViews(int visible){
+        p1temperature.setVisibility(visible);
+        p1current.setVisibility(visible);
+        p1weatherIcon.setVisibility(visible);
+    }
+
     @Override
     public void onResume(){
         super.onResume();
         allHistory.clear();
         topRef = FirebaseDatabase.getInstance().getReference("history");
         topRef.addChildEventListener (chEvListener);
+        IntentFilter weatherFilter = new IntentFilter(BROADCAST_WEATHER);
+        LocalBroadcastManager.getInstance(this).registerReceiver(weatherReceiver, weatherFilter);
     }
 
     @Override
     public void onPause(){
         super.onPause();
         topRef.removeEventListener(chEvListener);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(weatherReceiver);
     }
 
     private void doConversion() {
@@ -164,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                     HistoryContent.HistoryItem item = new HistoryContent.HistoryItem(dVal, cVal, mode.toString(),
                             fUnits.toString(), tUnits.toString(), fmt.print(DateTime.now()));
                     HistoryContent.addItem(item);
+                    WeatherService.startGetWeather(this, "42.963686", "-85.888595", "p1");
                     topRef.push().setValue(item);
                     break;
                 case Volume:
@@ -183,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
                     HistoryContent.HistoryItem item2 = new HistoryContent.HistoryItem(vdVal, vcVal, mode.toString(),
                             vfUnits.toString(), vtUnits.toString(), fmt2.print(DateTime.now()));
                     HistoryContent.addItem(item2);
+                    WeatherService.startGetWeather(this, "42.963686", "-85.888595", "p1");
                     topRef.push().setValue(item2);
                     break;
             }
@@ -227,6 +254,25 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+
+    private BroadcastReceiver weatherReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle bundle = intent.getExtras();
+            double temp = bundle.getDouble("TEMPERATURE");
+            String summary = bundle.getString("SUMMARY");
+            String icon = bundle.getString("ICON").replaceAll("-", "_");
+            String key = bundle.getString("KEY");
+            int resID = getResources().getIdentifier(icon , "drawable", getPackageName());
+            //setWeatherViews(View.VISIBLE);
+            if (key.equals("p1"))  {
+                p1current.setText(summary);
+                p1temperature.setText(Double.toString(temp));
+                p1weatherIcon.setImageResource(resID);
+            }
+        }
+    };
+
 
     private void hideKeyboard()
     {

@@ -132,5 +132,41 @@
         app:layout_constraintStart_toEndOf="@+id/clearButton"
         app:layout_constraintTop_toTopOf="@+id/clearButton" />
 
+    <ImageView
+        android:id="@+id/p1weatherIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/calcButton"
+        app:srcCompat="@drawable/clear_day" />
+
+    <TextView
+        android:id="@+id/p1current"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="8dp"
+        android:text="current"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/p1weatherIcon"
+        app:layout_constraintTop_toBottomOf="@+id/modeButton" />
+
+    <TextView
+        android:id="@+id/p1temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="temperature"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/p1weatherIcon"
+        app:layout_constraintTop_toBottomOf="@+id/p1current" />
+
 
 </android.support.constraint.ConstraintLayout>
